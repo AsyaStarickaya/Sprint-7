@@ -20,11 +20,6 @@ public class CreationCourierTest {
         RestAssured.baseURI = "http://qa-scooter.praktikum-services.ru/";
     }
 
-    @After
-    public void tearDown() {
-        given()
-                .delete("/api/v1/courier/" + id);
-    }
 
     @Test
     public void createCourier() {
@@ -119,6 +114,12 @@ public class CreationCourierTest {
                 .statusCode(400)
                 .assertThat().body("message", equalTo("Недостаточно данных для создания учетной записи"));
     }
+
+    @After
+    public void tearDown() {
+        given()
+                .delete("/api/v1/courier/" + id);
+    }
 }
 
-//продолжение следует...
+
