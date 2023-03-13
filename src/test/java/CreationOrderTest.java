@@ -1,4 +1,6 @@
 import Pojo.CreateOrderJson;
+import io.restassured.RestAssured;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -14,8 +16,6 @@ public class CreationOrderTest {
 
 
     public CreationOrderTest(List<String> color) {
-//        List<String> wordsList = Arrays.asList(color);
-//        this.color = (String[]) wordsList.toArray();
         this.color = color;
     }
 
@@ -24,9 +24,14 @@ public class CreationOrderTest {
         return new Object[][]{
                 new List[]{List.of("BLACK")},
                 new List[]{List.of("GREY")},
-                new List[]{List.of("BLACK")},
+                new List[]{List.of("BLACK", "GREY")},
                 new List[]{List.of("")}
         };
+    }
+
+    @Before
+    public void setUp() {
+        RestAssured.baseURI = "http://qa-scooter.praktikum-services.ru/";
     }
 
     @Test

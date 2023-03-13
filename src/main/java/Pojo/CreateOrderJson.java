@@ -6,7 +6,7 @@ public class CreateOrderJson {
     private String[] color;
 
     public CreateOrderJson(List<String> color) {
-        this.color = (String[]) color.toArray();
+        this.color = color.toArray(new String[0]);
     }
 
     public String[] getColor() {
