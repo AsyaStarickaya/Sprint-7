@@ -1,27 +1,14 @@
-import Pojo.GetOrdersFullJson;
-import Pojo.Orders;
+import pojo.GetOrdersFullJson;
 import io.restassured.RestAssured;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import static io.restassured.RestAssured.given;
-
 public class GetOrderTest {
-
-    @Before
-    public void setUp() {
-        RestAssured.baseURI = "http://qa-scooter.praktikum-services.ru/";
-    }
 
     @Test
     public void getOrder() {
-        GetOrdersFullJson getOrdersJson = given()
-                .header("Content-type", "application/json")
-                .log().all()
-                .get("/api/v1/orders")
-                .as(GetOrdersFullJson.class);
-
+        GetOrdersFullJson getOrdersJson = OrderApi.getOrder(ApiConstants.URL_FOR_ORDER);
         Assert.assertNotNull(getOrdersJson.getOrders());
     }
 }

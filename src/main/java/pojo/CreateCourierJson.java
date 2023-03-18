@@ -1,6 +1,4 @@
-package Pojo;
-
-import java.util.Random;
+package pojo;
 
 public class CreateCourierJson {
 

@@ -1,85 +1,44 @@
-import Pojo.CreateCourierJson;
-import Pojo.LoginCourierJson;
-import io.restassured.RestAssured;
+import pojo.CreateCourierJson;
+import pojo.LoginCourierJson;
 import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 
 
-import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.apache.http.HttpStatus.*;
 
 public class CreationCourierTest {
-    CreateCourierJson jsonForCreating = new CreateCourierJson("puf35", "1235010", "Qwerty-Ui111o");
+    CreateCourierJson jsonForCreating = new CreateCourierJson(ApiConstants.COURIER_LOGIN, ApiConstants.COURIER_PASSWORD, ApiConstants.COURIER_FIRSTNAME);
     LoginCourierJson jsonForLogin = new LoginCourierJson(jsonForCreating.getLogin(), jsonForCreating.getPassword());
     int id;
 
-    @Before
-    public void setUp() {
-        RestAssured.baseURI = "http://qa-scooter.praktikum-services.ru/";
-    }
-
-
     @Test
     public void createCourier() {
-        given()
-                .header("Content-type", "application/json")
-                .body(jsonForCreating)
-                .log().all()
-                .when()
-                .post("/api/v1/courier")
-                .then()
-                .log().all()
-                .statusCode(201)
+
+        CourierApi.sendPostRequest(jsonForCreating, ApiConstants.URL_FOR_CREATING)
+                .statusCode(SC_CREATED)
                 .assertThat().body("ok", equalTo(true));
 
-        id = given()
-                .header("Content-type", "application/json")
-                .body(jsonForLogin)
-                .log().all()
-                .when()
-                .post("/api/v1/courier/login")
-                .then()
-                .log().all()
-                .statusCode(200)
+        id = CourierApi.sendPostRequest(jsonForLogin, ApiConstants.URL_FOR_LOGIN)
+                .statusCode(SC_OK)
                 .assertThat().body("id", notNullValue())
                 .extract().path("id");
     }
 
     @Test
     public void tryToCreateTwoSameCourier() {
-        given()
-                .header("Content-type", "application/json")
-                .body(jsonForCreating)
-                .log().all()
-                .when()
-                .post("/api/v1/courier")
-                .then()
-                .log().all()
-                .statusCode(201);
+        CourierApi.sendPostRequest(jsonForCreating, ApiConstants.URL_FOR_CREATING)
+                .statusCode(SC_CREATED)
+                .assertThat().body("ok", equalTo(true));
 
-        id = given()
-                .header("Content-type", "application/json")
-                .body(jsonForLogin)
-                .log().all()
-                .when()
-                .post("/api/v1/courier/login")
-                .then()
-                .log().all()
-                .statusCode(200)
+        id = CourierApi.sendPostRequest(jsonForLogin, ApiConstants.URL_FOR_LOGIN)
+                .statusCode(SC_OK)
                 .assertThat().body("id", notNullValue())
                 .extract().path("id");
 
-        given()
-                .header("Content-type", "application/json")
-                .body(jsonForCreating)
-                .log().all()
-                .when()
-                .post("/api/v1/courier")
-                .then()
-                .log().all()
-                .statusCode(409)
+        CourierApi.sendPostRequest(jsonForCreating, ApiConstants.URL_FOR_CREATING)
+                .statusCode(SC_CONFLICT)
                 .assertThat().body("message", equalTo("Этот логин уже используется. Попробуйте другой."));
     }
 
@@ -87,15 +46,8 @@ public class CreationCourierTest {
     public void canNotCreateCourierWithoutLogin() {
         LoginCourierJson loginCourier = new LoginCourierJson("", jsonForCreating.getLogin());
 
-        given()
-                .header("Content-type", "application/json")
-                .body(loginCourier)
-                .log().all()
-                .when()
-                .post("/api/v1/courier")
-                .then()
-                .log().all()
-                .statusCode(400)
+        CourierApi.sendPostRequest(loginCourier, ApiConstants.URL_FOR_CREATING)
+                .statusCode(SC_BAD_REQUEST)
                 .assertThat().body("message", equalTo("Недостаточно данных для создания учетной записи"));
     }
 
@@ -103,22 +55,14 @@ public class CreationCourierTest {
     public void canNotCreatingCourierWithoutPassword() {
         LoginCourierJson loginCourier = new LoginCourierJson(jsonForCreating.getLogin(), "");
 
-        given()
-                .header("Content-type", "application/json")
-                .body(loginCourier)
-                .log().all()
-                .when()
-                .post("/api/v1/courier")
-                .then()
-                .log().all()
-                .statusCode(400)
+        CourierApi.sendPostRequest(loginCourier, ApiConstants.URL_FOR_CREATING)
+                .statusCode(SC_BAD_REQUEST)
                 .assertThat().body("message", equalTo("Недостаточно данных для создания учетной записи"));
     }
 
     @After
     public void tearDown() {
-        given()
-                .delete("/api/v1/courier/" + id);
+        CourierApi.deleteCourier(ApiConstants.URL_FOR_CREATING, id);
     }
 }
 

@@ -1,13 +1,11 @@
-import Pojo.CreateOrderJson;
-import io.restassured.RestAssured;
-import org.junit.Before;
+import pojo.CreateOrderJson;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import java.util.List;
 
-import static io.restassured.RestAssured.given;
+import static org.apache.http.HttpStatus.*;
 import static org.hamcrest.Matchers.notNullValue;
 
 @RunWith(Parameterized.class)
@@ -29,23 +27,12 @@ public class CreationOrderTest {
         };
     }
 
-    @Before
-    public void setUp() {
-        RestAssured.baseURI = "http://qa-scooter.praktikum-services.ru/";
-    }
 
     @Test
     public void createOrder() throws Exception {
         CreateOrderJson orderJson = new CreateOrderJson(color);
-        given()
-                .header("Content-type", "application/json")
-                .body(orderJson)
-                .log().all()
-                .when()
-                .post("/api/v1/orders")
-                .then()
-                .log().all()
-                .statusCode(201)
+        OrderApi.sendPostRequest(orderJson, ApiConstants.URL_FOR_ORDER)
+                .statusCode(SC_CREATED)
                 .assertThat().body("track", notNullValue());
     }
 }

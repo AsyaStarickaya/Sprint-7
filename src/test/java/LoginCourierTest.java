@@ -1,100 +1,56 @@
-import Pojo.CreateCourierJson;
-import Pojo.LoginCourierJson;
-import io.restassured.RestAssured;
+import pojo.CreateCourierJson;
+import pojo.LoginCourierJson;
 import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 
 
-import static io.restassured.RestAssured.given;
+import static org.apache.http.HttpStatus.*;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.notNullValue;
 
 public class LoginCourierTest {
-    CreateCourierJson createCourierJson = new CreateCourierJson("nkjame11313", "12345", "FirstName1313");
-    LoginCourierJson loginCourierJson = new LoginCourierJson(createCourierJson.getLogin(), createCourierJson.getPassword());
+    CreateCourierJson jsonForCreating = new CreateCourierJson(ApiConstants.COURIER_LOGIN, ApiConstants.COURIER_PASSWORD, ApiConstants.COURIER_FIRSTNAME);
+    LoginCourierJson jsonForLogin = new LoginCourierJson(jsonForCreating.getLogin(), jsonForCreating.getPassword());
     int id;
-
-    @Before
-    public void setUp() {
-        RestAssured.baseURI = "http://qa-scooter.praktikum-services.ru/";
-
-    }
 
     @Test
     public void loginCourier() {
-        given()
-                .header("Content-type", "application/json")
-                .body(createCourierJson)
-                .log().all()
-                .when()
-                .post("/api/v1/courier")
-                .then()
-                .statusCode(201);
+        CourierApi.sendPostRequest(jsonForCreating, ApiConstants.URL_FOR_CREATING)
+                .statusCode(SC_CREATED);
 
-        id = given()
-                .header("Content-type", "application/json")
-                .body(loginCourierJson)
-                .log().all()
-                .when()
-                .post("/api/v1/courier/login")
-                .then()
-                .log().all()
-                .statusCode(200)
+        id = CourierApi.sendPostRequest(jsonForLogin, ApiConstants.URL_FOR_LOGIN)
+                .statusCode(SC_OK)
                 .assertThat().body("id", notNullValue())
                 .extract().path("id");
     }
 
     @Test
     public void loginWithoutLogin() {
-        LoginCourierJson loginCourierJson = new LoginCourierJson("", createCourierJson.getPassword());
-        given()
-                .header("Content-type", "application/json")
-                .body(loginCourierJson)
-                .log().all()
-                .when()
-                .post("/api/v1/courier/login")
-                .then()
-                .log().all()
-                .statusCode(400)
+        LoginCourierJson loginCourierJson = new LoginCourierJson("", jsonForCreating.getPassword());
+        CourierApi.sendPostRequest(loginCourierJson, ApiConstants.URL_FOR_LOGIN)
+                .statusCode(SC_BAD_REQUEST)
                 .assertThat().body("message", equalTo("Недостаточно данных для входа"));
 
     }
 
     @Test
     public void loginWithoutPassword() {
-        LoginCourierJson loginCourierJson = new LoginCourierJson(createCourierJson.getLogin(), "");
-        given()
-                .header("Content-type", "application/json")
-                .body(loginCourierJson)
-                .log().all()
-                .when()
-                .post("/api/v1/courier/login")
-                .then()
-                .log().all()
-                .statusCode(400)
+        LoginCourierJson loginCourierJson = new LoginCourierJson(jsonForCreating.getLogin(), "");
+        CourierApi.sendPostRequest(loginCourierJson, ApiConstants.URL_FOR_LOGIN)
+                .statusCode(SC_BAD_REQUEST)
                 .assertThat().body("message", equalTo("Недостаточно данных для входа"));
     }
 
     @Test
     public void tryToLoginWithNonExistedAccount() {
-        LoginCourierJson loginCourierJson = new LoginCourierJson("fghjk1238bn", "12345");
-        given()
-                .header("Content-type", "application/json")
-                .body(loginCourierJson)
-                .log().all()
-                .when()
-                .post("/api/v1/courier/login")
-                .then()
-                .log().all()
-                .statusCode(404)
+        LoginCourierJson loginCourierJson = new LoginCourierJson(ApiConstants.COURIER_LOGIN, ApiConstants.COURIER_PASSWORD);
+        CourierApi.sendPostRequest(loginCourierJson, ApiConstants.URL_FOR_LOGIN)
+                .statusCode(SC_NOT_FOUND)
                 .assertThat().body("message", equalTo("Учетная запись не найдена"));
     }
 
     @After
     public void tearDown() {
-        given()
-                .delete("/api/v1/courier/" + id);
+        CourierApi.deleteCourier(ApiConstants.URL_FOR_CREATING, id);
     }
-
 }
